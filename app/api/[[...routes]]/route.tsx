@@ -55,6 +55,11 @@ const fetchUserDetails = async (username: string) => {
   }
 };
 
+const getTotalWrapUser = async () => {
+  const response = await axios.get('https://api.basedwrapped.xyz/total-users');
+  return response.data.data.total_users;
+}
+
 const fetchCastLoad = async (username: string) => {
   console.log("Fetching cast load for username:", username);
   try {
@@ -156,9 +161,10 @@ const app = new Frog({
 
 app.use("/*", serveStatic({ root: "./public" }));
 
-app.frame("/", (c) => {
+app.frame("/", async (c) => {
   const { inputText, buttonValue, status, frameData } = c;
-
+  //get total wrap user
+  const totalWrapUser = await getTotalWrapUser();
   return c.res({
     image: (
       <>
@@ -257,7 +263,7 @@ app.frame("/", (c) => {
                 style={{ width: 40, height: 20, marginRight: 10 }}
               />
               <p style={{ fontSize: 24, marginBottom: 20 }}>
-                500 checked wrapped in last 1hr
+                {totalWrapUser}+ checked wrapped in last 1hr
               </p>
             </div>
             {inputText && (
