@@ -9,6 +9,32 @@ import { createSystem } from "frog/ui";
 import { neynar } from "frog/hubs";
 import axios from "axios";
 
+import sharp from "sharp";
+
+export const downloadAndConvertToBase64Png = async (imageUrl: string) => {
+  try {
+    // Download the image
+    const response = await axios({
+      method: "get",
+      url: imageUrl,
+      responseType: "arraybuffer",
+    });
+
+    // Convert to PNG and encode to base64
+    const pngBuffer = await sharp(response.data)
+      .png() // Convert to PNG
+      .toBuffer();
+
+    // Create base64 string
+    const base64Image = `data:image/png;base64,${pngBuffer.toString("base64")}`;
+
+    return base64Image;
+  } catch (error) {
+    console.error("Error downloading or converting image:", error);
+    throw error;
+  }
+}
+
 const LOADING_MESSAGES = [
   {
     title: "Analyzing Your Farcaster Journey",
@@ -1147,6 +1173,8 @@ app.image("/img/:data", async (c) => {
   const data = c.req.param();
   const stats = JSON.parse(data.data);
 
+  const base64Pfp = await downloadAndConvertToBase64Png(stats[stats.length - 1]?.value);
+
   return c.res({
     headers: {
       "Cache-Control": "max-age=0",
@@ -1204,7 +1232,7 @@ app.image("/img/:data", async (c) => {
           </div>
 
           <div style={{display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
-            <img src={stats?.[stats.length - 1]?.value} alt="User PFP" style={{width: 60, height: 60, borderRadius: "50%", marginRight: 10}} />
+            <img src={base64Pfp} alt="User PFP" style={{width: 60, height: 60, borderRadius: "50%", marginRight: 10}} />
             <p style={{fontSize: 24, fontWeight: "600"}}>{stats?.[stats.length - 2]?.value}</p>
           </div>
 
@@ -1295,10 +1323,12 @@ app.image("/img/:data", async (c) => {
                       margin: "4px 0 8px 0",
                     }}
                   >
-                    {stat.value.slice(0, 4).map((item: any, index: number) => {
+                    {stat.value.slice(0, 4).map(async(item: any, index: number) => {
+                      const imageUrl = item.pfp_url ? item.pfp_url : item.image_url;
+                      const base64Image = await downloadAndConvertToBase64Png(imageUrl);
                       return (
                         <img
-                          src={item.pfp_url ? item.pfp_url : item.image_url}
+                          src={base64Image}
                           style={{
                             width: 60,
                             height: 60,
@@ -1387,12 +1417,12 @@ app.image("/img/:data", async (c) => {
                       margin: "4px 0 8px 0",
                     }}
                   >
-                    {stat.value.slice(0, 4).map((item: any) => {
+                    {stat.value.slice(0, 4).map(async(item: any) => {
+                      const imageUrl = item.pfp_url ? item.pfp_url : item.channel.image_url;
+                      const base64Image = await downloadAndConvertToBase64Png(imageUrl);
                       return (
                         <img
-                          src={
-                            item.pfp_url ? item.pfp_url : item.channel.image_url
-                          }
+                          src={base64Image}
                           style={{
                             width: 60,
                             height: 60,
