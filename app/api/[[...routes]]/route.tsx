@@ -93,7 +93,7 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
   );
 
   // Create the frame URL
-  const frameUrl = `https://farwrap.vercel.app/api/check-wrapped/${username}`;
+  const frameUrl = `https://farwrap.vercel.app/api/share/${username}`;
 
   // Create the share text
   const shareText = `Check out my Farcaster Wrapped 2024! 🎉\n\n`;
@@ -107,8 +107,8 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
   const encodedText = encodeURIComponent(textWithMentions);
 
   // Construct the URL with frame
-  // let composeURL = `https://warpcast.com/~/compose?text=${encodedText}&embeds[]=${encodeURIComponent(frameUrl)}`;
-    let composeURL = `https://warpcast.com/~/compose?text=${encodedText}`;
+  let composeURL = `https://warpcast.com/~/compose?text=${encodedText}&embeds[]=${encodeURIComponent(frameUrl)}`;
+    // let composeURL = `https://warpcast.com/~/compose?text=${encodedText}`;
 
 
   return composeURL;
@@ -289,8 +289,147 @@ app.frame("/", async (c) => {
 app.frame("/share/:fid", async (c) => {
   const { fid } = c.req.param();
   console.log("fid", fid);
+  // Fetch user details and cast load
+  let sanitizedInput = fid.trim().toLowerCase();
+  const castLoad = await fetchCastLoad(sanitizedInput);
+  console.log("Cast Load:", castLoad);
+  if (castLoad === 404) {
+    fetchUserDetails(sanitizedInput);
+    return c.res({
+      image: (
+        <div
+          style={{
+            display: "flex",
+            background:
+              "radial-gradient(231.44% 231% at 18.4% -109%, #E2B2FF 0%, #9F5AFF 100%)",
+            backgroundSize: "100% 100%",
+            flexDirection: "column",
+            height: "100%",
+            textAlign: "center",
+            width: "100%",
+            color: "white",
+            padding: "20px",
+            paddingTop: "60px",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            fontFamily: "DM Sans",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <p style={{ fontSize: 40, marginBottom: 20 }}>Analyzing Your Farcaster Journey</p>
+            <p style={{ fontSize: 24, marginBottom: 16 }}>
+              Crunching your casts, reactions, and connections...
+            </p>
+            <p style={{ fontSize: 18, opacity: 0.8 }}>
+              Click refresh to check progress
+            </p>
+          </div>
+        </div>
+      ),
+      intents: [
+        <Button value="check" action={`/check-wrapped/${sanitizedInput}`}>
+          Refresh
+        </Button>,
+        <Button value="check" action="/">
+          Go Back
+        </Button>,
+      ],
+    });
+  }
+
+  // Show loading state if not completed
+  if (castLoad && castLoad.isLoad && castLoad.data.is_completed === false) {
+    console.log('inputText is', sanitizedInput);
+    return c.res({
+      image: (
+        <div
+          style={{
+            display: "flex",
+            background:
+              "radial-gradient(231.44% 231% at 18.4% -109%, #E2B2FF 0%, #9F5AFF 100%)",
+            backgroundSize: "100% 100%",
+            flexDirection: "column",
+            height: "100%",
+            textAlign: "center",
+            width: "100%",
+            color: "white",
+            padding: "20px",
+            paddingTop: "60px",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            fontFamily: "DM Sans",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <p style={{ fontSize: 40, marginBottom: 20 }}>Hold On Tight</p>
+            <p style={{ fontSize: 24 }}>
+            Casting Through Your Memories...
+            </p>
+          </div>
+        </div>
+      ),
+    });
+  }
+  const userDetails = await fetchUserDetails(sanitizedInput);
+
+  // Simplified stats to reduce complexity
+  const stats = [
+    {
+      label: "Total Casts",
+      value: userDetails.interactions.totalCasts || 0,
+      type: "number",
+    },
+    {
+      label: "Top Fans",
+      value: userDetails.interactions.topFriends || [],
+      type: "array",
+    },
+    {
+      label: "Top Channels",
+      value: userDetails.interactions.topChannels || [],
+      type: "array",
+    },
+    {
+      label: "Farcaster Rank",
+      value: userDetails.user.rank || "N/A",
+      type: "number",
+    },
+    {
+      label: "Percentile",
+      value: userDetails.user.percentile || "N/A",
+      type: "number",
+    },
+  ];
+
+  let statsString = JSON.stringify(stats);
+  const topFriendsUsernames = stats.find(stat => stat.label === "Top Fans")?.value.map((friend: any) => friend.username) || [];
+
+  const composeURL = generateWarpcastComposeURL(sanitizedInput, topFriendsUsernames, userDetails.user.username);
+
   return c.res({
-    image: <div>Share</div>,
+    image: `/img/${encodeURIComponent(statsString)}`,
+    intents: [
+      <Button.Link href={composeURL}>Share</Button.Link>,
+      <Button action="/check-yours">Check Yours</Button>,
+    ],
   });
 });
 
@@ -1334,7 +1473,7 @@ app.frame("/check-others", async (c) => {
               style={{ width: 40, height: 20, marginRight: 10 }}
             />
             <p style={{ fontSize: 24, marginBottom: 20 }}>
-              {totalWrapUser} checked wrapped in last 1hr
+              {totalWrapUser}+ checked wrapped in last 1hr
             </p>
           </div>
           {inputText && (
