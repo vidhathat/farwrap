@@ -1561,7 +1561,7 @@ app.frame("/check-others", async (c) => {
       </div>
     ),
     intents: [
-      <TextInput placeholder="Search username (e.g. akhil-bvs)" />,
+      <TextInput placeholder="Search username (e.g. vidhatha)" />,
       <Button action={`/check-fid`}>See Wrapped</Button>,
     ],
   });
