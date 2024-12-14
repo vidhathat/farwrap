@@ -11,7 +11,7 @@ import axios from "axios";
 
 import sharp from "sharp";
 
-export const downloadAndConvertToBase64Png = async (imageUrl: string) => {
+const downloadAndConvertToBase64Png = async (imageUrl: string) => {
   try {
     // Download the image
     const response = await axios({
