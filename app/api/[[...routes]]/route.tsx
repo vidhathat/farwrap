@@ -51,7 +51,7 @@ const fetchUserDetails = async (username: string) => {
     return response.data.data;
   } catch (error) {
     console.error("Error fetching user details:", error);
-    return null;
+    return error;
   }
 };
 
@@ -162,8 +162,7 @@ const app = new Frog({
 app.use("/*", serveStatic({ root: "./public" }));
 
 app.frame("/", async (c) => {
-  const { inputText, buttonValue, status, frameData } = c;
-  //get total wrap user
+  const { inputText, buttonValue, status, frameData } = c;  
   const totalWrapUser = await getTotalWrapUser();
   return c.res({
     image: (
@@ -276,7 +275,7 @@ app.frame("/", async (c) => {
       </>
     ),
     intents: [
-      <Button value="check" action="/check-fid">
+      <Button value="check" action="/check-yours">
         Check Yours
       </Button>,
       // <TextInput placeholder="Enter username (e.g. vidhatha)" />,
@@ -293,6 +292,226 @@ app.frame("/share/:fid", async (c) => {
   return c.res({
     image: <div>Share</div>,
   });
+});
+
+app.frame("/check-yours", async (c) => {
+  const { frameData } = c;
+  console.log("frameData", frameData);
+  if(!frameData || !frameData.fid){
+    return c.res({
+      image: (
+        <div
+          style={{
+            display: "flex",
+            background: "linear-gradient(231.44deg, #E2B2FF 0%, #9F5AFF 100%)",
+            flexDirection: "column",
+            height: "100%",
+            width: "100%",
+            color: "white",
+            padding: "20px",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ fontSize: "40px", marginBottom: "20px" }}>
+            Please try again later
+          </p>
+          <p style={{ fontSize: "24px" }}>
+            We are experiencing high traffic, please try again later
+          </p>
+        </div>
+      ),
+      intents: [<Button action="/">Try Again</Button>],
+    });
+  }
+
+
+  let sanitizedInput = frameData?.fid.toString().trim().toLowerCase();
+  // Fetch user details
+  // const userDetails = await fetchUserDetails(sanitizedInput);
+  const castLoad = await fetchCastLoad(sanitizedInput);
+
+  console.log("Cast Load:", castLoad);
+  if(castLoad === 404){
+    console.log("user_name inside 404", frameData?.fid);
+    fetchUserDetails(sanitizedInput);
+    return c.res({
+      image: (
+        <div
+          style={{
+            display: "flex",
+            background:
+              "radial-gradient(231.44% 231% at 18.4% -109%, #E2B2FF 0%, #9F5AFF 100%)",
+            backgroundSize: "100% 100%",
+            flexDirection: "column",
+            height: "100%",
+            textAlign: "center",
+            width: "100%",
+            color: "white",
+            padding: "20px",
+            paddingTop: "60px",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            fontFamily: "DM Sans",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <p style={{ fontSize: 40, marginBottom: 20 }}>Analyzing Your Farcaster Journey</p>
+            <p style={{ fontSize: 24, marginBottom: 16 }}>
+              Crunching your casts, reactions, and connections...
+            </p>
+            <p style={{ fontSize: 18, opacity: 0.8 }}>
+              Click refresh to check progress
+            </p>
+          </div>
+        </div>
+      ),
+      intents: [
+        <Button action={`/check-wrapped/${frameData?.fid}`}>Refreshing</Button>,
+        <Button action="/">Go Back</Button>
+      ],
+    });
+  }
+  
+
+  if (castLoad && castLoad.isLoad && castLoad.data.is_completed === false) {
+    const randomMessage = LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
+    
+    return c.res({
+      image: (
+        <div
+          style={{
+            display: "flex",
+            background:
+              "radial-gradient(231.44% 231% at 18.4% -109%, #E2B2FF 0%, #9F5AFF 100%)",
+            backgroundSize: "100% 100%",
+            flexDirection: "column",
+            height: "100%",
+            textAlign: "center",
+            width: "100%",
+            color: "white",
+            padding: "20px",
+            paddingTop: "60px",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            fontFamily: "DM Sans",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <p style={{ fontSize: 40, marginBottom: 20 }}>{randomMessage.title}</p>
+            <p style={{ fontSize: 24, marginBottom: 16 }}>
+              {randomMessage.subtitle}
+            </p>
+            <p style={{ fontSize: 18, opacity: 0.8 }}>
+              Click refresh to check progress
+            </p>
+          </div>
+        </div>
+      ),
+      intents: [
+        <Button action={`/check-wrapped/${frameData?.fid}`}>Refresh</Button>,
+        <Button action="/">Go Back</Button>
+      ],
+    });
+  }
+
+      // If we have completed data or it's from fetchUserDetails, show the wrapped screen
+    const userDetails = await fetchUserDetails(sanitizedInput);
+
+
+  // const wrappedData = castLoad.isLoad ? castLoad.data : castLoad;
+  if (!userDetails) {
+    return c.res({
+      image: (
+        <div
+          style={{
+            display: "flex",
+            background: "linear-gradient(231.44deg, #E2B2FF 0%, #9F5AFF 100%)",
+            flexDirection: "column",
+            height: "100%",
+            width: "100%",
+            color: "white",
+            padding: "20px",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ fontSize: "40px", marginBottom: "20px" }}>
+            User Not Found
+          </p>
+          <p style={{ fontSize: "24px" }}>
+            No user found with username: {sanitizedInput}
+          </p>
+        </div>
+      ),
+      intents: [<Button action="/">Try Another Username</Button>],
+    });
+  }
+  
+  // Simplified stats to reduce complexity
+  const stats = [
+    {
+      label: "Total Casts",
+      value: userDetails.interactions.totalCasts || 0,
+      type: "number",
+    },
+    {
+      label: "Top Fans",
+      value: userDetails.interactions.topFriends || [],
+      type: "array",
+    },
+    {
+      label: "Top Channels",
+      value: userDetails.interactions.topChannels || [],
+      type: "array",
+    },
+    {
+      label: "Farcaster Rank",
+      value: userDetails.user.rank || "N/A",
+      type: "number",
+    },
+    {
+      label: "Percentile",
+      value: userDetails.user.percentile || "N/A",
+      type: "number",
+    },
+  ];
+
+  let statsString = JSON.stringify(stats);
+  const topFriendsUsernames = stats.find(stat => stat.label === "Top Fans")?.value.map((friend: any) => friend.username) || [];
+
+  const composeURL = generateWarpcastComposeURL(sanitizedInput, topFriendsUsernames, userDetails.user.username);
+
+  return c.res({
+    // image: `/img?data=${JSON.stringify(stats)}`,
+    image: `/img/${encodeURIComponent(statsString)}`,
+    intents: [
+      <Button.Link href={composeURL}>Share</Button.Link>,
+      <Button action="/check-others">Check Others</Button>,
+    ],
+  }); 
+
+ 
 });
 
 app.frame("/check-fid", async (c) => {
@@ -439,39 +658,12 @@ app.frame("/check-fid", async (c) => {
 }
 
   // const wrappedData = castLoad.isLoad ? castLoad.data : castLoad;
-  // if (!userDetails) {
-  //   return c.res({
-  //     image: (
-  //       <div
-  //         style={{
-  //           display: "flex",
-  //           background: "linear-gradient(231.44deg, #E2B2FF 0%, #9F5AFF 100%)",
-  //           flexDirection: "column",
-  //           height: "100%",
-  //           width: "100%",
-  //           color: "white",
-  //           padding: "20px",
-  //           alignItems: "center",
-  //           justifyContent: "center",
-  //           textAlign: "center",
-  //         }}
-  //       >
-  //         <p style={{ fontSize: "40px", marginBottom: "20px" }}>
-  //           User Not Found
-  //         </p>
-  //         <p style={{ fontSize: "24px" }}>
-  //           No user found with username: {sanitizedInput}
-  //         </p>
-  //       </div>
-  //     ),
-  //     intents: [<Button action="/">Try Another Username</Button>],
-  //   });
-  // }
+ 
   
   const userDetails = await fetchUserDetails(sanitizedInput);
   console.log("userDetails", userDetails);
 
-  if(!userDetails){
+  if(userDetails.status === 500 || !userDetails){
     
   return c.res({
       image: (
@@ -1041,8 +1233,10 @@ app.image("/img/:data", async (c) => {
 });
 
 app.frame("/check-others", async (c) => {
-  const { inputText, frameData } = c;
+  const { inputText } = c;
+  const totalWrapUser = await getTotalWrapUser();
 
+  console.log("inputText", inputText);
   return c.res({
     image: (
       <div
@@ -1140,7 +1334,7 @@ app.frame("/check-others", async (c) => {
               style={{ width: 40, height: 20, marginRight: 10 }}
             />
             <p style={{ fontSize: 24, marginBottom: 20 }}>
-              500 checked wrapped in last 1hr
+              {totalWrapUser} checked wrapped in last 1hr
             </p>
           </div>
           {inputText && (
