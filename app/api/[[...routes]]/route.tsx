@@ -100,7 +100,7 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
 
   // Append mentions after two line breaks if any exist
   const textWithMentions = formattedMentions.length > 0 
-    ? `${shareText}\n${formattedMentions.map(m => `@${m}`).join(' ')}\nframe built by @Vidhatha @Devesh` 
+    ? `${shareText}\nTop engaged fam : ${formattedMentions.map(m => `@${m}`).join(', ')}\n\nFrame built by @Vidhatha @Devesh` 
     : shareText;
 
   // Encode the text
@@ -288,11 +288,11 @@ app.frame("/", async (c) => {
 
 app.frame("/share/:fid", async (c) => {
   const { fid } = c.req.param();
-  console.log("fid", fid);
+  // console.log("fid", fid);
   // Fetch user details and cast load
   let sanitizedInput = fid.trim().toLowerCase();
   const castLoad = await fetchCastLoad(sanitizedInput);
-  console.log("Cast Load:", castLoad);
+  // console.log("Cast Load:", castLoad);
   if (castLoad === 404) {
     fetchUserDetails(sanitizedInput);
     return c.res({
@@ -348,7 +348,7 @@ app.frame("/share/:fid", async (c) => {
 
   // Show loading state if not completed
   if (castLoad && castLoad.isLoad && castLoad.data.is_completed === false) {
-    console.log('inputText is', sanitizedInput);
+    // console.log('inputText is', sanitizedInput);
     return c.res({
       image: (
         <div
@@ -416,6 +416,16 @@ app.frame("/share/:fid", async (c) => {
       label: "Percentile",
       value: userDetails.user.percentile || "N/A",
       type: "number",
+    },
+    {
+      label: "Username",
+      value: userDetails.user.username || "N/A",
+      type: "string",
+    },
+    {
+      label: "PFP",
+      value: userDetails.user.pfp_url || "N/A",
+      type: "string",
     },
   ];
 
@@ -516,7 +526,7 @@ app.frame("/check-yours", async (c) => {
         </div>
       ),
       intents: [
-        <Button action={`/check-wrapped/${frameData?.fid}`}>Refreshing</Button>,
+        <Button action={`/check-wrapped/${frameData?.fid}`}>Refresh</Button>,
         <Button action="/">Go Back</Button>
       ],
     });
@@ -633,6 +643,16 @@ app.frame("/check-yours", async (c) => {
       label: "Percentile",
       value: userDetails.user.percentile || "N/A",
       type: "number",
+    },
+    {
+      label: "Username",
+      value: userDetails.user.username || "N/A",
+      type: "string",
+    },
+    {
+      label: "PFP",
+      value: userDetails.user.pfp_url || "N/A",
+      type: "string",
     },
   ];
 
@@ -862,6 +882,16 @@ app.frame("/check-fid", async (c) => {
       value: userDetails.user.percentile || "N/A",
       type: "number",
     },
+    {
+      label: "Username",
+      value: userDetails.user.username || "N/A",
+      type: "string",
+    },
+    {
+      label: "PFP",
+      value: userDetails.user.pfp_url || "N/A",
+      type: "string",
+    },
   ];
 
   const topFriendsUsernames = stats.find(stat => stat.label === "Top Fans")?.value.map((friend: any) => friend.username) || [];
@@ -968,7 +998,7 @@ app.frame("/check-wrapped/:username", async (c) => {
         </div>
       ),
       intents: [
-        <Button action={`/check-wrapped/${user_name}`}>Refreshing</Button>,
+        <Button action={`/check-wrapped/${user_name}`}>Refresh</Button>,
         <Button action="/">Go Back</Button>
       ],
     });
@@ -1086,6 +1116,16 @@ app.frame("/check-wrapped/:username", async (c) => {
       value: userDetails.user.percentile || "N/A",
       type: "number",
     },
+    {
+      label: "Username",
+      value: userDetails.user.username || "N/A",
+      type: "string",
+    },
+    {
+      label: "PFP",
+      value: userDetails.user.pfp_url || "N/A",
+      type: "string",
+    },
   ];
 
   let statsString = JSON.stringify(stats);
@@ -1124,7 +1164,7 @@ app.image("/img/:data", async (c) => {
           width: "100%",
           color: "white",
           padding: "20px",
-          paddingTop: "60px",
+          paddingTop: "30px",
           position: "absolute",
           top: 0,
           left: 0,
@@ -1163,6 +1203,12 @@ app.image("/img/:data", async (c) => {
             </p>
           </div>
 
+          <div style={{display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+            <img src={stats?.[stats.length - 1]?.value} alt="User PFP" style={{width: 60, height: 60, borderRadius: "50%", marginRight: 10}} />
+            <p style={{fontSize: 24, fontWeight: "600"}}>{stats?.[stats.length - 2]?.value}</p>
+          </div>
+
+
           <p style={{ fontSize: 28, fontWeight: "400" }}>
             This year you're among{" "}
             <span
@@ -1174,7 +1220,7 @@ app.image("/img/:data", async (c) => {
               }}
             >
               {/* Top {100 - userDetails.user.percentile}% */}
-              Top {100 - stats[stats.length - 1].value}%
+              Top {100 - stats[stats.length - 3].value}%
             </span>{" "}
             in the purple app.
           </p>
