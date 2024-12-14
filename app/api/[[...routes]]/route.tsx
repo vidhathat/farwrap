@@ -96,11 +96,11 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
   const frameUrl = `https://farwrap.vercel.app/api/share/${username}`;
 
   // Create the share text
-  const shareText = `Check out my Farcaster Wrapped 2024! 🎉\n\n`;
+  const shareText = `Here’s my Farcaster Wrapped ‘24! 🎉\n`;
 
   // Append mentions after two line breaks if any exist
   const textWithMentions = formattedMentions.length > 0 
-    ? `${shareText}\n\n${formattedMentions.map(m => `@${m}`).join(' ')}` 
+    ? `${shareText}\n${formattedMentions.map(m => `@${m}`).join(' ')}\nframe built by @Vidhatha @Devesh` 
     : shareText;
 
   // Encode the text
@@ -117,7 +117,7 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
 const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
-  title: "Farcaster Username Checker",
+  title: "Farcaster Wrapped",
   initialState: {
     username: null,
     userDetails: null,
@@ -261,7 +261,7 @@ app.frame("/", async (c) => {
                 alt="Farcaster Logo"
                 style={{ width: 40, height: 20, marginRight: 10 }}
               />
-              <p style={{ fontSize: 24, marginBottom: 20 }}>
+              <p style={{ fontSize: 34, marginBottom: 20 }}>
                 {totalWrapUser}+ checked wrapped in last 1hr
               </p>
             </div>
@@ -427,7 +427,7 @@ app.frame("/share/:fid", async (c) => {
   return c.res({
     image: `/img/${encodeURIComponent(statsString)}`,
     intents: [
-      <Button.Link href={composeURL}>Share</Button.Link>,
+      // <Button.Link href={composeURL}>Share</Button.Lin
       <Button action="/check-yours">Check Yours</Button>,
     ],
   });
@@ -1472,7 +1472,7 @@ app.frame("/check-others", async (c) => {
               alt="Farcaster Logo"
               style={{ width: 40, height: 20, marginRight: 10 }}
             />
-            <p style={{ fontSize: 24, marginBottom: 20 }}>
+            <p style={{ fontSize: 34, marginBottom: 20 }}>
               {totalWrapUser}+ checked wrapped in last 1hr
             </p>
           </div>
