@@ -126,7 +126,7 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
 
   // Append mentions after two line breaks if any exist
   const textWithMentions = formattedMentions.length > 0 
-    ? `${shareText}\nTop engaged fam : ${formattedMentions.map(m => `@${m}`).join(', ')}\n\nFrame built by @Vidhatha` 
+    ? `${shareText}\nTop engaged fam : ${formattedMentions.map(m => `@${m}`).join(', ')}\n\nFrame built by @vidhatha` 
     : shareText;
 
   // Encode the text
