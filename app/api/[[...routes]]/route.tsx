@@ -119,7 +119,7 @@ function generateWarpcastComposeURL(text: any, mentions = [], username: string) 
   );
 
   // Create the frame URL
-  const frameUrl = `https://farwrap.vercel.app/api/share/${username}`;
+  const frameUrl = `https://farwrapped.vercel.app/api/share/${username}`;
 
   // Create the share text
   const shareText = `Here’s my Farcaster Wrapped ‘24! 🎉\n`;
